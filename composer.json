@@ -1,6 +1,6 @@
 {
     "name": "martin3r/platform-diary",
-    "description": "Template Module for Platform - Use this as a starting point for new modules",
+    "description": "Diary (persönliches Tagebuch pro Person, Einträge per MCP)",
     "type": "library",
     "license": "MIT",
     "authors": [
