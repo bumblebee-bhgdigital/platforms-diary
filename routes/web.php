@@ -19,6 +19,7 @@
  */
 
 use Platform\Diary\Livewire\Dashboard;
+use Platform\Diary\Livewire\Show;
 use Platform\Diary\Livewire\Showcase;
 
 /**
@@ -27,6 +28,11 @@ use Platform\Diary\Livewire\Showcase;
  * Hauptübersicht des Moduls
  */
 Route::get('/', Dashboard::class)->name('diary.dashboard');
+
+// Übersicht aller Diaries (Alias auf dieselbe Komponente) und Detailseite.
+// {diary} = Route-Model-Binding auf die ID (wie {plannerProject} im Planner).
+Route::get('/diaries', Dashboard::class)->name('diary.diaries.index');
+Route::get('/diaries/{diary}', Show::class)->name('diary.diaries.show');
 
 /**
  * nx-Showcase Route
