@@ -288,6 +288,10 @@ class DiaryServiceProvider extends ServiceProvider
             $registry->register(new \Platform\Diary\Tools\CreateDiaryTool());
             $registry->register(new \Platform\Diary\Tools\UpdateDiaryTool());
             $registry->register(new \Platform\Diary\Tools\DeleteDiaryTool());
+            $registry->register(new \Platform\Diary\Tools\ListEntriesTool());
+            $registry->register(new \Platform\Diary\Tools\CreateEntryTool());
+            $registry->register(new \Platform\Diary\Tools\UpdateEntryTool());
+            $registry->register(new \Platform\Diary\Tools\DeleteEntryTool());
         } catch (\Throwable $e) {
             // ToolRegistry nicht verfügbar
         }
