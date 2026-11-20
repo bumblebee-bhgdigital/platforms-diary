@@ -16,13 +16,13 @@ class DeleteDiaryTool implements ToolContract, ToolMetadataContract
 
     public function getName(): string
     {
-        return 'diaries.DELETE';
+        return 'diary.diaries.DELETE';
     }
 
     public function getDescription(): string
     {
         return 'DELETE /diaries/{id} - Löscht ein Diary (Soft-Delete, wiederherstellbar). Pflicht: id. '
-            . 'Zum Beenden eines Diary ohne Löschen stattdessen diaries.PUT mit status=archived nutzen.';
+            . 'Zum Beenden eines Diary ohne Löschen stattdessen diary.diaries.PUT mit status=archived nutzen.';
     }
 
     public function getSchema(): array

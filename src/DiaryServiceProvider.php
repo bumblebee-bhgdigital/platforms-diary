@@ -279,7 +279,7 @@ class DiaryServiceProvider extends ServiceProvider
         );
     }
 
-    /** MCP-Tools diaries.GET/POST/PUT/DELETE in der Tool-Registry. */
+    /** MCP-Tools diary.diaries.GET/POST/PUT/DELETE in der Tool-Registry. */
     protected function registerTools(): void
     {
         try {

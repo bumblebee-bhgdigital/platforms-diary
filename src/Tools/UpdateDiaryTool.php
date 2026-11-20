@@ -18,7 +18,7 @@ class UpdateDiaryTool implements ToolContract, ToolMetadataContract
 
     public function getName(): string
     {
-        return 'diaries.PUT';
+        return 'diary.diaries.PUT';
     }
 
     public function getDescription(): string

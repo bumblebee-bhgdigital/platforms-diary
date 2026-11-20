@@ -18,13 +18,13 @@ class CreateDiaryTool implements ToolContract, ToolMetadataContract
 
     public function getName(): string
     {
-        return 'diaries.POST';
+        return 'diary.diaries.POST';
     }
 
     public function getDescription(): string
     {
         return 'POST /diaries - Legt ein Diary an (Status standardmäßig draft). Pflicht: title. '
-            . 'Optional entity_id (+ inherit_down): hängt das Diary direkt an einen Knoten. status=active aktiviert es sofort. Ein Diary kann an mehrere Knoten gehängt werden (weitere über diaries.PUT).';
+            . 'Optional entity_id (+ inherit_down): hängt das Diary direkt an einen Knoten. status=active aktiviert es sofort. Ein Diary kann an mehrere Knoten gehängt werden (weitere über diary.diaries.PUT).';
     }
 
     public function getSchema(): array
@@ -34,7 +34,7 @@ class CreateDiaryTool implements ToolContract, ToolMetadataContract
             'properties' => array_merge($this->setFieldSchema(), [
                 'team_id' => ['type' => 'integer', 'description' => 'Optional: Team-ID (Default: aktuelles Team).'],
                 'status' => ['type' => 'string', 'enum' => ['draft', 'active'], 'description' => 'Optional: draft (Default) oder active.'],
-                'entity_id' => ['type' => 'integer', 'description' => 'Optional: Knoten (Organisations-Entity), an den das Diary gleich gehängt wird. Nutze "organization.entities.GET". Weitere Knoten über diaries.PUT.'],
+                'entity_id' => ['type' => 'integer', 'description' => 'Optional: Knoten (Organisations-Entity), an den das Diary gleich gehängt wird. Nutze "organization.entities.GET". Weitere Knoten über diary.diaries.PUT.'],
                 'inherit_down' => ['type' => 'boolean', 'description' => 'Optional (mit entity_id): Diary wirkt auch an allen Unterknoten (Default false).'],
             ]),
             'required' => ['title'],

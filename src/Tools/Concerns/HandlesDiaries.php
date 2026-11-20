@@ -10,7 +10,7 @@ use Platform\Organization\Models\OrganizationEntity;
 use Platform\Diary\Models\Diary;
 use Platform\Diary\Services\DiaryService;
 
-/** Gemeinsame Helfer der diaries.*-Tools (Team-Auflösung, Serialisierung, Autorisierung). */
+/** Gemeinsame Helfer der diary.diaries.*-Tools (Team-Auflösung, Serialisierung, Autorisierung). */
 trait HandlesDiaries
 {
     /** @return array{team: Team|null, error: ToolResult|null} */

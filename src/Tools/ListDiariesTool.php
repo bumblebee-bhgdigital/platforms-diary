@@ -17,7 +17,7 @@ class ListDiariesTool implements ToolContract, ToolMetadataContract
 
     public function getName(): string
     {
-        return 'diaries.GET';
+        return 'diary.diaries.GET';
     }
 
     public function getDescription(): string
