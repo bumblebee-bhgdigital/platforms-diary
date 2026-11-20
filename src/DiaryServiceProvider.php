@@ -23,6 +23,8 @@
 
 namespace Platform\Diary;
 
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -193,14 +195,102 @@ class DiaryServiceProvider extends ServiceProvider
          * <livewire:diary.dashboard />
          */
         $this->registerLivewireComponents();
-        
+
         /**
-         * SCHRITT 7: Tools registrieren (optional)
-         * 
-         * Falls dein Modul AI/Chat-Tools hat:
-         * 
-         * $this->registerTools();
+         * SCHRITT 7: Morph-Alias, Policy, Tools
          */
+        $this->registerMorphMap();
+        $this->registerPolicies();
+        $this->registerEntityLinkProvider();
+        $this->registerTools();
+    }
+
+    /**
+     * Organization-Bridge: Diary als verknüpfbarer Objekttyp (EntityLinkProvider) + Link-Hook.
+     */
+    protected function registerEntityLinkProvider(): void
+    {
+        try {
+            resolve(\Platform\Organization\Services\EntityLinkRegistry::class)
+                ->register(new \Platform\Diary\Organization\DiaryEntityLinkProvider());
+        } catch (\Throwable $e) {
+            // Organization-Modul nicht geladen
+        }
+
+        // Verknüpfungen entstehen nicht nur über den DiaryService, sondern auch extern
+        // (organization.entity.link.POST, Terminal-App "Verknüpfungen"). Der Hook hält die
+        // Vererbungs-Einstellungen (diary_nodes) konsistent und dispatcht das Event.
+        if (class_exists(\Platform\Organization\Models\OrganizationDimensionLink::class)) {
+            \Platform\Organization\Models\OrganizationDimensionLink::created(function ($link) {
+                $this->onDimensionLinkChanged($link, \Platform\Diary\Events\DiaryLinkChanged::LINKED);
+            });
+            \Platform\Organization\Models\OrganizationDimensionLink::deleted(function ($link) {
+                $this->onDimensionLinkChanged($link, \Platform\Diary\Events\DiaryLinkChanged::UNLINKED);
+            });
+        }
+    }
+
+    protected function onDimensionLinkChanged($link, string $action): void
+    {
+        if ($link->linkable_type !== \Platform\Diary\Models\Diary::MORPH_ALIAS) {
+            return;
+        }
+
+        try {
+            $diary = \Platform\Diary\Models\Diary::withTrashed()->find($link->linkable_id);
+            if (! $diary) {
+                return;
+            }
+            \Platform\Organization\Services\EntityDimensionBridge::flush();
+            $entityId = \Platform\Organization\Services\EntityDimensionBridge::entityId((int) $link->dimension_value_id);
+
+            if ($entityId) {
+                if ($action === \Platform\Diary\Events\DiaryLinkChanged::LINKED) {
+                    \Platform\Diary\Models\DiaryNode::query()->firstOrCreate(
+                        ['diary_id' => $diary->id, 'entity_id' => $entityId],
+                        ['inherit_down' => false],
+                    );
+                } else {
+                    \Platform\Diary\Models\DiaryNode::query()
+                        ->where('diary_id', $diary->id)->where('entity_id', $entityId)->delete();
+                }
+            }
+
+            \Platform\Diary\Events\DiaryLinkChanged::dispatch($diary, $action, $entityId ?: null);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Diary: DimensionLink-Hook fehlgeschlagen', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /** Morph-Alias `diary` (DimensionLinks, EntityLinkProvider, Authz). */
+    protected function registerMorphMap(): void
+    {
+        Relation::morphMap([
+            \Platform\Diary\Models\Diary::MORPH_ALIAS => \Platform\Diary\Models\Diary::class,
+        ]);
+    }
+
+    /** Graph-Autorisierung wie PlannerProjectPolicy. */
+    protected function registerPolicies(): void
+    {
+        Gate::policy(
+            \Platform\Diary\Models\Diary::class,
+            \Platform\Diary\Policies\DiaryPolicy::class
+        );
+    }
+
+    /** MCP-Tools diary.diaries.GET/POST/PUT/DELETE in der Tool-Registry. */
+    protected function registerTools(): void
+    {
+        try {
+            $registry = resolve(\Platform\Core\Tools\ToolRegistry::class);
+            $registry->register(new \Platform\Diary\Tools\ListDiariesTool());
+            $registry->register(new \Platform\Diary\Tools\CreateDiaryTool());
+            $registry->register(new \Platform\Diary\Tools\UpdateDiaryTool());
+            $registry->register(new \Platform\Diary\Tools\DeleteDiaryTool());
+        } catch (\Throwable $e) {
+            // ToolRegistry nicht verfügbar
+        }
     }
 
     /**

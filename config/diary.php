@@ -42,7 +42,7 @@ return [
      */
     'navigation' => [
         'route' => 'diary.dashboard',
-        'icon'  => 'heroicon-o-cube',
+        'icon'  => 'heroicon-o-book-open',
         'order' => 100, // Hohe Zahl = weiter unten in der Navigation
     ],
 
@@ -68,12 +68,12 @@ return [
      */
     'sidebar' => [
         [
-            'group' => 'Allgemein',
+            'group' => 'Diaries',
             'items' => [
                 [
-                    'label' => 'Dashboard',
+                    'label' => 'Übersicht',
                     'route' => 'diary.dashboard',
-                    'icon'  => 'heroicon-o-home',
+                    'icon'  => 'heroicon-o-book-open',
                 ],
                 [
                     'label' => 'nx-Showcase',
