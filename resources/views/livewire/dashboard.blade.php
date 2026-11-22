@@ -93,7 +93,7 @@
                         </x-nx-table-header>
                         <x-nx-table-body>
                             @foreach($diaries as $diary)
-                                <x-nx-table-row wire:key="diary-row-{{ $diary->id }}" :href="route('diary.diaries.show', $diary)">
+                                <x-nx-table-row wire:key="diary-row-{{ $diary->id }}" clickable :href="route('diary.diaries.show', $diary)">
                                     <x-nx-table-cell>
                                         {{ $diary->title }}
                                         @if($multiTeam && $diary->team)
