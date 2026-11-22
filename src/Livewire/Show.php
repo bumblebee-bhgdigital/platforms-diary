@@ -3,8 +3,8 @@
 /**
  * Show Livewire Component — Detailseite eines Diaries.
  *
- * Eigenschaften (Knoten mit Vererbung, Owner, Agent) plus Platzhalter-Bereiche für Definitionen,
- * Einträge (folgen in eigenen Boards).
+ * Eigenschaften (Knoten mit Vererbung, Owner, Agent) plus read-only Einträge-Timeline
+ * (Kind-Komponente diary.entries-feed).
  */
 
 namespace Platform\Diary\Livewire;

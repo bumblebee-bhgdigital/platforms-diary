@@ -92,6 +92,11 @@ class Diary extends Model implements HasDisplayName
         return $this->hasMany(DiaryNode::class, 'diary_id');
     }
 
+    public function entries(): HasMany
+    {
+        return $this->hasMany(DiaryEntry::class, 'diary_id');
+    }
+
     // ── Anzeige ──────────────────────────────────────────────────
 
     public function getDisplayName(): ?string

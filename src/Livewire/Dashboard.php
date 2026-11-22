@@ -4,7 +4,7 @@
  * Dashboard Livewire Component — Übersicht aller Diaries des Teams.
  *
  * Zeigt die für den User sichtbaren Diaries der Team-Familie (Sichtbarkeit via Diary::visibleTo),
- * Kennzahl-Kacheln und das Anlegen neuer Diaries. Verknüpfung mit Knoten: Sidebar bzw. Detailseite.
+ * Kennzahl-Kacheln, die neuesten Einträge (read-only) und das Anlegen neuer Diaries. Verknüpfung mit Knoten: Sidebar bzw. Detailseite.
  */
 
 namespace Platform\Diary\Livewire;
@@ -19,6 +19,7 @@ use Platform\Diary\Enums\DiaryStatus;
 use Platform\Diary\Exceptions\DiaryException;
 use Platform\Diary\Livewire\Concerns\ResolvesTeamFamily;
 use Platform\Diary\Models\Diary;
+use Platform\Diary\Models\DiaryEntry;
 use Platform\Diary\Models\DiaryNode;
 use Platform\Diary\Services\DiaryService;
 
@@ -118,6 +119,23 @@ class Dashboard extends Component
             }
         }
 
+        // Einträge je Diary (Anzahl + letzter Eintrag) und die neuesten Einträge — jeweils nur sichtbare
+        $entryStats = DiaryEntry::query()
+            ->visibleTo($user)
+            ->whereIn('diary_entries.diary_id', $all->pluck('id')->all())
+            ->selectRaw('diary_entries.diary_id, count(*) as entries_count, max(diary_entries.entry_at) as last_entry_at')
+            ->groupBy('diary_entries.diary_id')
+            ->get()
+            ->keyBy('diary_id');
+        $recentEntries = DiaryEntry::query()
+            ->visibleTo($user)
+            ->whereIn('diary_entries.diary_id', $all->pluck('id')->all())
+            ->with(['author:id,name,type,avatar'])
+            ->orderByDesc('entry_at')
+            ->orderByDesc('id')
+            ->take(6)
+            ->get();
+
         $diaries = $this->statusFilter !== ''
             ? $all->filter(fn ($s) => $s->status->value === $this->statusFilter)->values()
             : $all;
@@ -127,11 +145,15 @@ class Dashboard extends Component
             'active' => $all->where('status', DiaryStatus::ACTIVE)->count(),
             'draft' => $all->where('status', DiaryStatus::DRAFT)->count(),
             'unlinked' => $all->filter(fn ($s) => empty($nodesByDiary[$s->id]))->count(),
+            'entries' => (int) $entryStats->sum('entries_count'),
         ];
 
         return view('diary::livewire.dashboard', [
             'diaries' => $diaries,
             'nodesByDiary' => $nodesByDiary,
+            'entryStats' => $entryStats,
+            'recentEntries' => $recentEntries,
+            'diaryTitles' => $all->pluck('title', 'id'),
             'stats' => $stats,
             'multiTeam' => count($teamIds) > 1,
             'statusOptions' => array_map(fn (DiaryStatus $s) => ['value' => $s->value, 'label' => $s->label()], DiaryStatus::cases()),

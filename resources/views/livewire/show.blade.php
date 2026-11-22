@@ -1,6 +1,5 @@
 {{--
-    Detailseite Diary (nx-Design-System): Eigenschaften + Platzhalter-Bereiche.
-    Einträge folgen in eigenen Boards und docken hier an.
+    Detailseite Diary (nx-Design-System): Eigenschaften + Einträge-Timeline (diary.entries-feed).
 --}}
 
 <x-ui-page>
@@ -109,9 +108,9 @@
             <x-nx-property-row icon="heroicon-o-cpu-chip" label="Verantwortlicher Agent">{{ $diary->responsibleAgent?->name ?? '–' }}</x-nx-property-row>
         </x-nx-card>
 
-        {{-- Platzhalter-Bereiche (folgen in eigenen Boards) --}}
-        <x-nx-section icon="heroicon-o-book-open" title="Einträge" description="Persönliche Tagebuch-Einträge dieses Diary.">
-            <x-nx-card><x-nx-empty icon="heroicon-o-book-open">Noch keine Einträge — dieser Bereich folgt in einem eigenen Board.</x-nx-empty></x-nx-card>
+        {{-- Einträge (read-only; entstehen per MCP) --}}
+        <x-nx-section icon="heroicon-o-book-open" title="Einträge" description="Tagebuch-Einträge dieses Diary — geschrieben per MCP, hier zum Lesen und Wiederfinden.">
+            <livewire:diary.entries-feed :diary="$diary" :key="'entries-feed-' . $diary->id" />
         </x-nx-section>
     </x-ui-page-container>
 

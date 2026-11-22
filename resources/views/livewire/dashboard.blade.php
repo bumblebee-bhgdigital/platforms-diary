@@ -25,9 +25,43 @@
         <x-nx-stat-grid :cols="4">
             <x-nx-stat label="Diaries gesamt" :value="$stats['total']" icon="heroicon-o-book-open" />
             <x-nx-stat label="Aktiv" :value="$stats['active']" icon="heroicon-o-check-circle" accent="var(--nx-success)" />
-            <x-nx-stat label="Entwurf" :value="$stats['draft']" icon="heroicon-o-pencil-square" />
+            <x-nx-stat label="Einträge" :value="$stats['entries']" icon="heroicon-o-pencil-square" />
             <x-nx-stat label="Unverknüpft" :value="$stats['unlinked']" icon="heroicon-o-link-slash" accent="var(--nx-warning)" />
         </x-nx-stat-grid>
+
+        @if($recentEntries->isNotEmpty())
+            <x-nx-section icon="heroicon-o-sparkles" title="Zuletzt geschrieben" description="Die neuesten Einträge aus deinen Diaries.">
+                <x-nx-card flush>
+                    <ul class="m-0 list-none divide-y divide-[color:var(--nx-line)] p-0">
+                        @foreach($recentEntries as $entry)
+                            @php
+                                $excerpt = \Illuminate\Support\Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags(\Illuminate\Support\Str::markdown((string) $entry->content)))), 140);
+                                $at = \Carbon\CarbonImmutable::parse($entry->entry_at)->locale('de');
+                            @endphp
+                            <li wire:key="recent-{{ $entry->id }}">
+                                <x-nx-list-item :href="route('diary.diaries.show', $entry->diary_id)"
+                                                :title="$entry->title ?: ($excerpt ?: 'Ohne Titel')"
+                                                :subtitle="($diaryTitles[$entry->diary_id] ?? '') . ($entry->title && $excerpt ? ' · ' . $excerpt : '')"
+                                                :meta="$at->diffForHumans(short: true)">
+                                    <x-slot name="leading">
+                                        <span class="flex h-7 w-7 items-center justify-center rounded-[6px] bg-[color:var(--nx-accent-soft)]"
+                                              style="color:{{ $entry->type?->tone() ?? 'var(--nx-faint)' }}"
+                                              title="{{ $entry->type?->label() ?? 'Eintrag' }}">
+                                            @svg($entry->type?->icon() ?? 'heroicon-o-document-text', 'w-4 h-4')
+                                        </span>
+                                    </x-slot>
+                                    @if($entry->author)
+                                        <x-slot name="trailing">
+                                            <x-nx-avatar size="sm" :name="$entry->author->name" :src="$entry->author->avatarUrl()" />
+                                        </x-slot>
+                                    @endif
+                                </x-nx-list-item>
+                            </li>
+                        @endforeach
+                    </ul>
+                </x-nx-card>
+            </x-nx-section>
+        @endif
 
         <x-nx-section icon="heroicon-o-list-bullet" title="Alle Diaries" :hint="$diaries->count()"
                       description="Ein Diary ist ein persönliches Tagebuch und kann an mehreren Knoten hängen; die Vererbung nach unten ist pro Zuordnung wählbar.">
@@ -53,6 +87,7 @@
                             <x-nx-table-header-cell>Titel</x-nx-table-header-cell>
                             <x-nx-table-header-cell>Knoten</x-nx-table-header-cell>
                             <x-nx-table-header-cell>Status</x-nx-table-header-cell>
+                            <x-nx-table-header-cell>Einträge</x-nx-table-header-cell>
                             <x-nx-table-header-cell>Owner</x-nx-table-header-cell>
                             <x-nx-table-header-cell align="right">Agent</x-nx-table-header-cell>
                         </x-nx-table-header>
@@ -73,6 +108,15 @@
                                         @endforelse
                                     </x-nx-table-cell>
                                     <x-nx-table-cell><x-nx-badge :variant="$diary->status->badgeVariant()" dot>{{ $diary->status->label() }}</x-nx-badge></x-nx-table-cell>
+                                    <x-nx-table-cell>
+                                        @php $es = $entryStats[$diary->id] ?? null; @endphp
+                                        @if($es)
+                                            <span class="tabular-nums">{{ $es->entries_count }}</span>
+                                            <span class="ml-1 text-xs text-[color:var(--nx-muted)]">zuletzt {{ \Carbon\CarbonImmutable::parse($es->last_entry_at)->locale('de')->diffForHumans(short: true) }}</span>
+                                        @else
+                                            <span class="text-xs text-[color:var(--nx-muted)]">–</span>
+                                        @endif
+                                    </x-nx-table-cell>
                                     <x-nx-table-cell>{{ $diary->owner?->name ?? '–' }}</x-nx-table-cell>
                                     <x-nx-table-cell align="right">{{ $diary->responsibleAgent?->name ?? '–' }}</x-nx-table-cell>
                                 </x-nx-table-row>
