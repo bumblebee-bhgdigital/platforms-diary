@@ -109,9 +109,51 @@
             <x-nx-property-row icon="heroicon-o-cpu-chip" label="Verantwortlicher Agent">{{ $diary->responsibleAgent?->name ?? '–' }}</x-nx-property-row>
         </x-nx-card>
 
-        {{-- Platzhalter-Bereiche (folgen in eigenen Boards) --}}
+        {{-- Einträge --}}
         <x-nx-section icon="heroicon-o-book-open" title="Einträge" description="Persönliche Tagebuch-Einträge dieses Diary.">
-            <x-nx-card><x-nx-empty icon="heroicon-o-book-open">Noch keine Einträge — dieser Bereich folgt in einem eigenen Board.</x-nx-empty></x-nx-card>
+            @can('update', $diary)
+                <div class="mb-3">
+                    <x-nx-button variant="primary" size="sm" wire:click="openEntry">Neuer Eintrag</x-nx-button>
+                </div>
+            @endcan
+            <div class="space-y-3">
+                @forelse($entries as $entry)
+                    <x-nx-card wire:key="entry-{{ $entry->id }}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-xs text-[color:var(--nx-muted)]">
+                                    {{ $entry->entry_at?->format('d.m.Y H:i') }}@if($entry->author) · {{ $entry->author->name }}@endif
+                                </div>
+                                @if($entry->title)
+                                    <h3 class="m-0 mt-1 text-base font-semibold text-[color:var(--nx-text)]">{{ $entry->title }}</h3>
+                                @endif
+                            </div>
+                            <div class="flex shrink-0 items-center gap-2">
+                                @if($entry->type)<x-nx-badge variant="info">{{ $entry->type->label() }}</x-nx-badge>@endif
+                                <x-nx-badge variant="neutral">{{ $entry->visibility->label() }}</x-nx-badge>
+                            </div>
+                        </div>
+                        @if($entry->content)
+                            <p class="mt-2 mb-0 text-sm text-[color:var(--nx-text)] whitespace-pre-line">{{ $entry->content }}</p>
+                        @endif
+                        @if(! empty($entry->tags))
+                            <div class="mt-2 flex flex-wrap gap-1">
+                                @foreach($entry->tags as $tag)<x-nx-badge variant="neutral">#{{ $tag }}</x-nx-badge>@endforeach
+                            </div>
+                        @endif
+                        @can('update', $diary)
+                            @if($entry->isEditableBy(auth()->user()))
+                                <div class="mt-2 flex gap-3">
+                                    <button type="button" wire:click="openEntry({{ $entry->id }})" class="text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-text)] underline">Bearbeiten</button>
+                                    <button type="button" wire:click="deleteEntry({{ $entry->id }})" wire:confirm="Eintrag löschen?" class="text-xs text-[color:var(--nx-muted)] hover:text-[color:var(--nx-danger)] underline">Löschen</button>
+                                </div>
+                            @endif
+                        @endcan
+                    </x-nx-card>
+                @empty
+                    <x-nx-card><x-nx-empty icon="heroicon-o-book-open">Noch keine Einträge.</x-nx-empty></x-nx-card>
+                @endforelse
+            </div>
         </x-nx-section>
     </x-ui-page-container>
 
@@ -126,6 +168,26 @@
             <div class="flex justify-end gap-3">
                 <x-nx-button variant="ghost" wire:click="$set('showEdit', false)">Abbrechen</x-nx-button>
                 <x-nx-button variant="primary" wire:click="save">Speichern</x-nx-button>
+            </div>
+        </x-slot>
+    </x-nx-modal>
+
+    {{-- Eintrag anlegen/bearbeiten --}}
+    <x-nx-modal wire:model="showEntryModal" size="md">
+        <x-slot name="header">{{ $editingEntryId ? 'Eintrag bearbeiten' : 'Neuer Eintrag' }}</x-slot>
+        <div class="space-y-4">
+            <x-nx-input-text name="entryForm.title" label="Titel" wire:model="entryForm.title" />
+            <x-nx-input-textarea name="entryForm.content" label="Inhalt" wire:model="entryForm.content" rows="6" />
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <x-nx-input-select name="entryForm.type" label="Art" wire:model="entryForm.type" :options="$typeOptions" />
+                <x-nx-input-select name="entryForm.visibility" label="Sichtbarkeit" wire:model="entryForm.visibility" :options="$visibilityOptions" />
+            </div>
+            <x-nx-input-text name="entryForm.tags" label="Tags" wire:model="entryForm.tags" hint="Kommagetrennt." />
+        </div>
+        <x-slot name="footer">
+            <div class="flex justify-end gap-3">
+                <x-nx-button variant="ghost" wire:click="$set('showEntryModal', false)">Abbrechen</x-nx-button>
+                <x-nx-button variant="primary" wire:click="saveEntry">Speichern</x-nx-button>
             </div>
         </x-slot>
     </x-nx-modal>
